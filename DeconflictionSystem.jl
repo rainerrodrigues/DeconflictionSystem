@@ -13,7 +13,7 @@ using Metaheuristics
 using ProgressMeter
 
 export Waypoint, Trajectory, Mission, Conflict, DeconflictionSystem
-export check_conflicts, optimize_trajectory, visualize_4d
+export check_conflicts, optimize_trajectory, visualize_4d, run_test_cases
 
 # Data Structures
 struct Waypoint
@@ -238,3 +238,80 @@ function visualize_4d(mission::Mission, conflicts::Vector{Conflict}=Conflict[])
     
     return PlotlyJS.plot(traces, layout)
 end
+
+# Test Cases
+function run_test_cases()
+    println("Running test cases...")
+    
+    # Test Case 1: No conflict
+    println("\nTest Case 1: No conflict")
+    wp1 = [
+        Waypoint(0.0, 0.0, 10.0, DateTime("2023-01-01T00:00:00")),
+        Waypoint(100.0, 0.0, 10.0, DateTime("2023-01-01T00:01:00")),
+        Waypoint(100.0, 100.0, 10.0, DateTime("2023-01-01T00:02:00"))
+    ]
+    primary = Trajectory(wp1, "Primary", 10.0, 5.0)
+    
+    wp2 = [
+        Waypoint(0.0, 100.0, 10.0, DateTime("2023-01-01T00:00:00")),
+        Waypoint(100.0, 100.0, 10.0, DateTime("2023-01-01T00:01:00")),
+        Waypoint(100.0, 0.0, 10.0, DateTime("2023-01-01T00:02:00"))
+    ]
+    other = Trajectory(wp2, "Other1", 10.0, 5.0)
+    
+    mission = Mission(primary, [other])
+    conflicts = check_conflicts(mission)
+    @assert isempty(conflicts) "Test Case 1 failed: Expected no conflicts"
+    println("✓ Passed")
+    
+    # Test Case 2: Spatial conflict
+    println("\nTest Case 2: Spatial conflict")
+    wp3 = [
+        Waypoint(0.0, 0.0, 10.0, DateTime("2023-01-01T00:00:00")),
+        Waypoint(100.0, 0.0, 10.0, DateTime("2023-01-01T00:01:00")),
+        Waypoint(100.0, 100.0, 10.0, DateTime("2023-01-01T00:02:00"))
+    ]
+    primary2 = Trajectory(wp3, "Primary2", 10.0, 5.0)
+    
+    wp4 = [
+        Waypoint(50.0, -10.0, 10.0, DateTime("2023-01-01T00:00:30")),
+        Waypoint(50.0, 10.0, 10.0, DateTime("2023-01-01T00:01:30"))
+    ]
+    other2 = Trajectory(wp4, "Other2", 5.0, 5.0)
+    
+    mission2 = Mission(primary2, [other2])
+    conflicts2 = check_conflicts(mission2)
+    @assert !isempty(conflicts2) "Test Case 2 failed: Expected conflicts"
+    println("✓ Passed - Found $(length(conflicts2)) conflicts")
+    
+    # Test Case 3: Temporal conflict (same space, different times)
+    println("\nTest Case 3: Temporal conflict check")
+    wp5 = [
+        Waypoint(0.0, 0.0, 10.0, DateTime("2023-01-01T00:00:00")),
+        Waypoint(100.0, 0.0, 10.0, DateTime("2023-01-01T00:01:00"))
+    ]
+    primary3 = Trajectory(wp5, "Primary3", 10.0, 5.0)
+    
+    wp6 = [
+        Waypoint(0.0, 0.0, 10.0, DateTime("2023-01-01T01:00:00")),
+        Waypoint(100.0, 0.0, 10.0, DateTime("2023-01-01T01:01:00"))
+    ]
+    other3 = Trajectory(wp6, "Other3", 10.0, 5.0)
+    
+    mission3 = Mission(primary3, [other3])
+    conflicts3 = check_conflicts(mission3)
+    @assert isempty(conflicts3) "Test Case 3 failed: Expected no conflicts (different times)"
+    println("✓ Passed")
+    
+    # Test Case 4: Optimization
+    println("\nTest Case 4: Trajectory optimization")
+    bounds = [(0.0, 200.0), (0.0, 200.0), (0.0, 50.0)]  # x, y, z bounds
+    optimized = optimize_trajectory_bee_swarm(primary2, [other2], bounds)
+    conflicts_after = check_conflicts(Mission(optimized, [other2]))
+    @assert length(conflicts_after) < length(conflicts2) "Test Case 4 failed: Optimization didn't reduce conflicts"
+    println("✓ Passed - Reduced conflicts from $(length(conflicts2)) to $(length(conflicts_after))")
+    
+    return mission, mission2, mission3, optimized
+end
+
+end  # module
