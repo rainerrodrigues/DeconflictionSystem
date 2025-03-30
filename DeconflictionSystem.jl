@@ -11,6 +11,7 @@ using Distributions
 using LightGraphs
 using Metaheuristics
 using ProgressMeter
+using NearestNeighbors
 
 export Waypoint, Trajectory, Mission, Conflict, DeconflictionSystem
 export check_conflicts, optimize_trajectory, visualize_4d, run_test_cases
@@ -45,7 +46,7 @@ end
 
 struct DeconflictionSystem
     missions::PriorityQueue{String,Mission}  # Priority based on mission urgency
-    spatial_kdtree::KDTree  # For spatial indexing (simplified here)
+    spatial_kdtree::NearestNeighbors.KDTree  # For spatial indexing (simplified here)
     temporal_index::Dict{DateTime,Vector{String}}  # Time-based indexing
 end
 
@@ -68,6 +69,17 @@ function interpolate_position(traj::Trajectory, t::DateTime)
         end
     end
     return nothing
+end
+
+# Building spatial index for comparison of trajectories
+function build_spatial_index(trajectories::Vector{Trajectory})
+    points = Vector{SVector{3,Float64}}()
+    for traj in trajectories
+        for wp in traj.waypoints
+            push!(points, SVector(wp.x, wp.y, wp.z))
+        end
+    end
+    return KDTree(points)
 end
 
 function check_spatial_conflict(traj1::Trajectory, traj2::Trajectory, time_step::Period=Second(1))
