@@ -13,7 +13,7 @@ module DeconflictionSystem
  using ProgressMeter
  using NearestNeighbors
  
- export Waypoint, Trajectory, Mission, Conflict, DeconflictionSystem
+ export Waypoint, Trajectory, Mission, Conflict, DeconflictionSystemDescript
  export check_conflicts, optimize_trajectory, visualize_4d, run_test_cases
  
  # Data Structures

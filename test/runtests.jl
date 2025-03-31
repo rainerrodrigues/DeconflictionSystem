@@ -1,21 +1,22 @@
 # tests/runtests.jl
 using Test
-using DeconflictionSystem
-include("test_cases.jl")
+using Revise
+include("../src/DeconflictionSystem.jl")
+import .TestCases
 
 
-@testset "Basic Conflict Detection" begin
+@testset "Basic Tests" begin
     # No conflict case
-    mission = create_no_conflict_case()
-    @test isempty(check_conflicts(mission))
+    mission = TestCases.create_no_conflict_case()
+    @test isempty(DeconflictionSystem.check_conflicts(mission))
     
     # Spatial conflict case
-    mission = create_spatial_conflict_case()
-    @test !isempty(check_conflicts(mission))
+    mission = TestCases.create_spatial_conflict_case()
+    @test !isempty(DeconflictionSystem.check_conflicts(mission))
     
     # Temporal separation case
-    mission = create_temporal_conflict_case()
-    @test isempty(check_conflicts(mission))
+    mission = TestCases.create_temporal_conflict_case()
+    @test isempty(DeconflictionSystem.check_conflicts(mission))
 end
 
 @testset "Edge Cases" begin

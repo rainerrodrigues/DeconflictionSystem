@@ -18,7 +18,6 @@ function run_qa_suite()
     safe_case.others[1].waypoints[1] = Waypoint(5.01,0,10,now())
     @assert isempty(check_conflicts(safe_case)) "Safe distance failed"
     
-    # Add more validation checks...
     
     return failures == 0
 end
