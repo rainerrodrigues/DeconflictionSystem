@@ -1,6 +1,6 @@
 # demo.jl
 include("DeconflictionSystem.jl")  # Main module
-include("test_cases.jl")        # Test cases module
+include("tests/test_cases.jl")        # Test cases module
 
 using .UAVDeconfliction
 using .TestCases
