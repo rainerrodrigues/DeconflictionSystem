@@ -1,5 +1,5 @@
 name = "DeconflictionSystem"
-uuid = "..."  # Generate with UUIDs.uuid4()
+uuid = "893dca6a-79b4-460a-a62e-454a8a8d162f"
 authors = ["Rainer Rodrigues rainerrodrigues16@gmail.com"]
 version = "0.1.0"
 
