@@ -1,6 +1,7 @@
 using .UAVDeconfliction
 using Plots
 using PlotlyJS
+using Dates: Second
 
 # Run test cases
 mission1, mission2, mission3, optimized_mission = UAVDeconfliction.run_test_cases()
@@ -27,27 +28,52 @@ times = range(
 )
 
 anim = @animate for t in times
-    plot(title="UAV Positions at $(t)", xlabel="X", ylabel="Y", zlabel="Z", legend=:topright)
+    # Initialize empty plot
+    p = Plots.scatter3d([], [], [], 
+        title="UAV Positions at $(t)",
+        xlabel="X (m)",
+        ylabel="Y (m)",
+        zlabel="Altitude (m)",
+        legend=:topright,
+        xlim=(0, 500),  # Adjust based on your coordinate range
+        ylim=(0, 500),
+        zlim=(0, 100)
+    )
     
     # Plot primary drone position
     pos1 = UAVDeconfliction.interpolate_position(mission2.primary, t)
-    scatter!([pos1[1]], [pos1[2]], [pos1[3]], label="Primary", color=:blue, markersize=5)
-    
-    # Plot other drones
+    if pos1 !== nothing
+        Plots.scatter3d!(p, [pos1[1]], [pos1[2]], [pos1[3]], 
+            label="Primary", 
+            color=:blue, 
+            markersize=5)
+    end
+    # Add other drones using Plots.scatter3d
     for traj in mission2.others
         pos = UAVDeconfliction.interpolate_position(traj, t)
         if pos !== nothing
-            scatter!([pos[1]], [pos[2]], [pos[3]], label="Drone $(traj.drone_id)", color=:red, markersize=5)
+            Plots.scatter3d!(
+                [pos[1]], [pos[2]], [pos[3]], 
+                label="Drone $(traj.drone_id)", 
+                color=:red, 
+                markersize=5
+            )
         end
     end
     
-    # Highlight conflicts at this time
+    # Highlight conflicts
     for c in conflicts
-        if abs((c.time - t).value) < 5000  # Within 5 seconds
-            scatter!([c.location[1]], [c.location[2]], [c.location[3]], 
-                   label="Conflict", color=:yellow, markershape=:x, markersize=8)
+        if abs((c.time - t).value) < 5000
+            Plots.scatter3d!(
+                [c.location[1]], [c.location[2]], [c.location[3]], 
+                label="Conflict", 
+                color=:yellow, 
+                markershape=:x, 
+                markersize=8
+            )
         end
     end
+    p
 end
 
 gif(anim, "uav_conflicts.gif", fps=5)
