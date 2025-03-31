@@ -1,6 +1,6 @@
 
 include("src/DeconflictionSystem.jl")  
-include("tests/test_cases.jl")     
+include("test/test_cases.jl")     
 
 module Demonstration
 
