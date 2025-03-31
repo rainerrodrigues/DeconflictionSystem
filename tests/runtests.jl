@@ -1,9 +1,8 @@
 # tests/runtests.jl
-include("../DeconflictionSystem.jl")
+using Test
+using DeconflictionSystem: UAVDeconfliction
 include("test_cases.jl")
 
-using .UAVDeconfliction, .TestCases
-using Test
 
 @testset "Basic Conflict Detection" begin
     # No conflict case
