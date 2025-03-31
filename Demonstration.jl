@@ -1,25 +1,28 @@
-# demo.jl
-include("DeconflictionSystem.jl")  # Main module
-include("tests/test_cases.jl")        # Test cases module
 
-using .UAVDeconfliction
-using .TestCases
-using Plots
-using Dates
+include("DeconflictionSystem.jl")  
+include("tests/test_cases.jl")     
+
+module Demonstration
+
+# Load dependencies first
+using Main.UAVDeconfliction, Main.TestCases
+using Plots, Dates
+
+
 
 function run_demonstration()
     println("Starting UAV Deconfliction Demonstration\n")
 
     # Test Case 1: No conflict
     println("Running Test Case 1: No conflict scenario")
-    mission1 = create_test_case_1()
+    mission1 = TestCases.create_test_case_1()
     conflicts1 = UAVDeconfliction.check_conflicts(mission1)
     @assert isempty(conflicts1) "Test Case 1 failed - Found conflicts when none expected"
     println("✓ Passed - No conflicts detected\n")
 
     # Test Case 2: Spatial conflict
     println("Running Test Case 2: Spatial conflict scenario")
-    mission2 = create_test_case_2()
+    mission2 = TestCases.create_test_case_2()
     conflicts2 = UAVDeconfliction.check_conflicts(mission2)
     @assert !isempty(conflicts2) "Test Case 2 failed - No conflicts detected when expected"
     println("✓ Passed - Found $(length(conflicts2)) conflicts")
@@ -28,14 +31,14 @@ function run_demonstration()
 
     # Test Case 3: Temporal separation
     println("Running Test Case 3: Temporal separation scenario")
-    mission3 = create_test_case_3()
+    mission3 = TestCases.create_test_case_3()
     conflicts3 = UAVDeconfliction.check_conflicts(mission3)
     @assert isempty(conflicts3) "Test Case 3 failed - Found conflicts when none expected"
     println("✓ Passed - No conflicts detected despite spatial overlap\n")
 
     # Test Case 4: Optimization
     println("Running Test Case 4: Trajectory optimization")
-    case4 = create_test_case_4()
+    case4 = TestCases.create_test_case_4()
     
     # Show initial conflicts
     initial_conflicts = UAVDeconfliction.check_conflicts(case4.initial_mission)
@@ -109,7 +112,13 @@ function plot_positions!(plot, mission, t)
     end
 end
 
-# Run the demonstration
-if !isinteractive()
-    run_demonstration()
+# Export the main function
+export run_demonstration
+
+end  # end module
+
+# Execution guard
+if abspath(PROGRAM_FILE) == @__FILE__
+    using .Demonstration
+    Demonstration.run_demonstration()
 end
