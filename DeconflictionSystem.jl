@@ -52,6 +52,9 @@ module UAVDeconfliction
  
  # Core Conflict Detection Functions
  function interpolate_position(traj::Trajectory, t::DateTime)
+    isempty(traj.waypoints) && return nothing
+    t < traj.waypoints[1].t && return traj.waypoints[1]
+    t > traj.waypoints[end].t && return traj.waypoints[end]
      # Linear interpolation between waypoints
      for i in 1:length(traj.waypoints)-1
          wp1 = traj.waypoints[i]
@@ -119,14 +122,20 @@ module UAVDeconfliction
  end
  
  function check_conflicts(mission::Mission, time_step::Period=Second(1))
-     all_conflicts = Vector{Conflict}()
+    # Input validation
+    @assert time_step.value > 0 "Time step must be positive"
+    @assert !isempty(mission.primary.waypoints) "Primary trajectory has no waypoints"
+    try
+        all_conflicts = Vector{Conflict}()
+        @showprogress for other in mission.others
+        conflicts = check_spatial_conflict(mission.primary, other, time_step)
+        append!(all_conflicts, conflicts)
+        return all_conflicts
+    catch e
+        @error "Conflict detection failed" exception=(e, catch_backtrace())
+        return Conflict[]  # Fail-safe return
+    end
      
-     @showprogress for other in mission.others
-         conflicts = check_spatial_conflict(mission.primary, other, time_step)
-         append!(all_conflicts, conflicts)
-     end
-     
-     return all_conflicts
  end
  
  # Optimization using Bio-inspired Algorithms
