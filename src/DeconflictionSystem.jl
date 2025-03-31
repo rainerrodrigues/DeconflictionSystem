@@ -131,12 +131,14 @@ module UAVDeconfliction
         conflicts = check_spatial_conflict(mission.primary, other, time_step)
         append!(all_conflicts, conflicts)
         return all_conflicts
+        end
     catch e
         @error "Conflict detection failed" exception=(e, catch_backtrace())
         return Conflict[]  # Fail-safe return
     end
+
      
- end
+end
  
  # Optimization using Bio-inspired Algorithms
  function trajectory_cost(traj::Trajectory)
