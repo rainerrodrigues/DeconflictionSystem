@@ -1,4 +1,4 @@
-module UAVDeconfliction
+module DeconflictionSystem
  
  using LinearAlgebra
  using StaticArrays
@@ -44,7 +44,7 @@ module UAVDeconfliction
      distance::Float64
  end
  
- struct DeconflictionSystem
+ struct DeconflictionSystemDescript
      missions::PriorityQueue{String,Mission}  # Priority based on mission urgency
      spatial_kdtree::NearestNeighbors.KDTree  # For spatial indexing (simplified here)
      temporal_index::Dict{DateTime,Vector{String}}  # Time-based indexing

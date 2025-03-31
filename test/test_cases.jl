@@ -1,6 +1,6 @@
 # tests/test_cases.jl
 module TestCases
-using ..UAVDeconfliction, Dates
+using ..DeconflictionSystem, Dates
 export create_no_conflict_case, create_spatial_conflict_case, 
        create_temporal_conflict_case, create_edge_cases
 

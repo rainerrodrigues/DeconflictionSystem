@@ -5,7 +5,7 @@ include("test/test_cases.jl")
 module Demonstration
 
 # Load dependencies first
-using Main.UAVDeconfliction, Main.TestCases
+using Main.DeconflictionSystem, Main.TestCases
 using Plots, Dates
 
 

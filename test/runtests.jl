@@ -1,6 +1,6 @@
 # tests/runtests.jl
 using Test
-using DeconflictionSystem: UAVDeconfliction
+using DeconflictionSystem
 include("test_cases.jl")
 
 
