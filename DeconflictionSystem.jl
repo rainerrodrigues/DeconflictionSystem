@@ -3,7 +3,7 @@ module UAVDeconfliction
  using LinearAlgebra
  using StaticArrays
  using Plots
- using PlotlyJS
+ using PlotlyJS: PlotlyJS, scatter3d, Layout, attr
  using DataStructures
  using Dates
  using Random
@@ -145,9 +145,9 @@ module UAVDeconfliction
      return distance + 0.1*time  # Weighted sum
  end
  
- function optimize_trajectory_bee_swarm(initial_traj::Trajectory, other_trajs::Vector{Trajectory}, 
-                                      bounds::Vector{Tuple{Float64,Float64}}, 
-                                      max_iter::Int=100, num_bees::Int=50)
+ function optimize_trajectory(initial_traj::Trajectory, other_trajs::Vector{Trajectory}, 
+    bounds::Vector{Tuple{Float64,Float64}}, 
+    max_iter::Int=50, population_size::Int=30)
      # Bee Swarm Optimization to find conflict-free trajectory
      
      # Objective function to minimize (conflicts + cost)
@@ -175,10 +175,21 @@ module UAVDeconfliction
      D = 4 * length(initial_traj.waypoints)  # x,y,z,t for each waypoint
      lower = [-1.0 for _ in 1:D]  # Adjustments
      upper = [1.0 for _ in 1:D]
+
+     # Create bounds matrix (required by current Metaheuristics API)
+    bounds_matrix = Matrix{Float64}(undef, D, 2)
+    for i in 1:D
+        bounds_matrix[i,1] = lower[i]
+        bounds_matrix[i,2] = upper[i]
+    end
      
-     # Run Bee Swarm Optimization
-     result = optimize(objective, lower, upper, BSO(num_bees=num_bees, max_iters=max_iter))
-     
+    # Set up ECA algorithm with current API
+    options = Metaheuristics.Options(iterations=max_iter, show_results=true)
+    algorithm = Metaheuristics.ECA(;N=population_size, options=options)
+
+    # Run optimization (using current recommended approach)
+    result = Metaheuristics.optimize(objective, bounds_matrix, algorithm)
+
      # Apply best solution
      best_x = minimizer(result)
      optimized_waypoints = deepcopy(initial_traj.waypoints)
@@ -197,7 +208,7 @@ module UAVDeconfliction
  # Visualization
  function visualize_4d(mission::Mission, conflicts::Vector{Conflict}=Conflict[])
      # Create 4D plot (3D space + color for time)
-     trace_primary = scatter3d(
+     trace_primary = PlotlyJS.scatter3d(
          x=[wp.x for wp in mission.primary.waypoints],
          y=[wp.y for wp in mission.primary.waypoints],
          z=[wp.z for wp in mission.primary.waypoints],
@@ -212,7 +223,7 @@ module UAVDeconfliction
      
      # Add other drones
      for (i, traj) in enumerate(mission.others)
-         push!(traces, scatter3d(
+         push!(traces, PlotlyJS.scatter3d(
              x=[wp.x for wp in traj.waypoints],
              y=[wp.y for wp in traj.waypoints],
              z=[wp.z for wp in traj.waypoints],
@@ -236,7 +247,7 @@ module UAVDeconfliction
          ))
      end
      
-     layout = Layout(
+     layout = PlotlyJS.Layout(
          title="4D UAV Trajectories (Color Represents Time)",
          scene=attr(
              xaxis_title="X (m)",
@@ -324,7 +335,7 @@ module UAVDeconfliction
      # Test Case 4: Optimization
      println("\nTest Case 4: Trajectory optimization")
      bounds = [(0.0, 200.0), (0.0, 200.0), (0.0, 50.0)]  # x, y, z bounds
-     optimized = optimize_trajectory_bee_swarm(primary2, [other2], bounds)
+     optimized = optimize_trajectory(primary2, [other2], bounds)
      conflicts_after = check_conflicts(Mission(optimized, [other2]))
      @assert length(conflicts_after) < length(conflicts2) "Test Case 4 failed: Optimization didn't reduce conflicts"
      println("✓ Passed - Reduced conflicts from $(length(conflicts2)) to $(length(conflicts_after))")
